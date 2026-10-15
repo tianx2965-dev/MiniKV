@@ -2,12 +2,12 @@
 
 bool MiniKV::Set(const string& key, const string& value)
 {
-	_data[key] = value;
+	_data[key]._value = value;
 
 	return true;
 }
 
-bool MiniKV::Get(const string& key, string& value) const
+bool MiniKV::Get(const string& key, string& value)
 {
 	auto it = _data.find(key);
 
@@ -16,7 +16,14 @@ bool MiniKV::Get(const string& key, string& value) const
 		return false;
 	}
 
-	value = it->second;
+	if (it->second._expireTime != 0
+		&& time(nullptr) >= it->second._expireTime)
+	{
+		_data.erase(it);
+		return false;
+
+	}
+	value = it->second._value;
 
 	return true;
 }
@@ -56,7 +63,9 @@ bool MiniKV::Save(const string& filename) const
 	}
 	for (auto it = _data.begin(); it != _data.end(); ++it)
 	{
-		ofs << it->first << " " << it->second << endl;
+		ofs << it->first << " "
+			<< it->second._value <<" "
+			<< it->second._expireTime<< endl;
 	}
 
 	ofs.close();
@@ -74,14 +83,33 @@ bool MiniKV::Load(const string& filename)
 	}
 
 	string key;
-	string value;
+	Entry entry;
 
-	while (ifs >> key >> value)
+	while (ifs >> key >> entry._value >> entry._expireTime)
 	{
-		_data[key] = value;
+		if (entry._expireTime != 0
+			&& time(nullptr) >= entry._expireTime)
+		{
+			continue;
+		}
+		_data[key]= entry;
 	}
 
 	ifs.close();
+
+	return true;
+}
+
+bool MiniKV::Expire(const string& key, int seconds)
+{
+	auto it = _data.find(key);
+
+	if (it == _data.end())
+	{
+		return false;
+	}
+
+	it->second._expireTime = time(nullptr) + seconds;
 
 	return true;
 }

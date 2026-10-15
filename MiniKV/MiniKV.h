@@ -4,8 +4,15 @@
 #include<unordered_map>
 #include<sstream>
 #include<fstream>
+#include<ctime>
 
 using namespace std;
+
+struct Entry
+{
+	string _value;
+	time_t _expireTime = 0;//过期时间
+};
 
 class MiniKV
 {
@@ -14,7 +21,7 @@ public:
 	bool Set(const string& key, const string& value);
 
 	//根据key查找value
-	bool Get(const string& key, string& value) const;
+	bool Get(const string& key, string& value) ;
 
 	//删除key
 	bool Del(const string& key);
@@ -29,7 +36,10 @@ public:
 	bool Save(const string& filename) const;
 	bool Load(const string& filename);
 
-private:
-	unordered_map<string, string> _data;
+	//给某个key设置一个过期时间
+	bool Expire(const string& key, int seconds);
 
+
+private:
+	unordered_map<string, Entry> _data;
 };

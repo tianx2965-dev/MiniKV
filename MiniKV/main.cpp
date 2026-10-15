@@ -103,6 +103,21 @@ void System_Start(MiniKV& db)
 		{
 			break;
 		}
+		else if (cmd == "EXPIRE")
+		{
+			string key;
+			int seconds;
+
+			ss >> key >> seconds;
+			if (db.Expire(key, seconds))
+			{
+				cout << "OK" << endl;
+			}
+			else
+			{
+				cout << "Key not found" << endl;
+			}
+		}
 	}
 }
 int main()
